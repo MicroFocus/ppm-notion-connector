@@ -9,7 +9,7 @@ import com.ppm.integration.agilesdk.connector.notion.model.*;
 import com.ppm.integration.agilesdk.connector.notion.rest.ClientResponse;
 import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestClient;
 import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestConfig;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 

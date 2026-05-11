@@ -9,7 +9,7 @@ import com.kintana.core.logging.LogLevel;
 import com.kintana.core.logging.LogManager;
 import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.connector.notion.NotionConstants;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
