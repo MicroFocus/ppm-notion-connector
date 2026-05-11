@@ -1,10 +1,11 @@
-
 /*
  * © Copyright 2019 - 2020 Micro Focus or one of its affiliates.
  */
 
 package com.ppm.integration.agilesdk.connector.notion;
 
+import com.kintana.core.logging.LogManager;
+import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.ValueSet;
 import com.ppm.integration.agilesdk.connector.notion.model.NotionDatabase;
 import com.ppm.integration.agilesdk.connector.notion.model.NotionPage;
@@ -17,7 +18,6 @@ import com.ppm.integration.agilesdk.provider.Providers;
 import com.ppm.integration.agilesdk.provider.UserProvider;
 import com.ppm.integration.agilesdk.ui.*;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class NotionWorkPlanIntegration extends WorkPlanIntegration {
 
 
-    private final Logger logger = Logger.getLogger(NotionWorkPlanIntegration.class);
+    private final Logger log = LogManager.getLogger(NotionWorkPlanIntegration.class);
 
     public NotionWorkPlanIntegration() {
     }
