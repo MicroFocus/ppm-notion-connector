@@ -1,4 +1,3 @@
-
 /*
  * © Copyright 2019 - 2020 Micro Focus or one of its affiliates.
  */
@@ -11,12 +10,17 @@ import com.kintana.core.logging.LogManager;
 import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.connector.notion.NotionConstants;
 import org.apache.commons.lang.StringUtils;
-import org.apache.wink.client.ClientConfig;
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.Resource;
-import org.apache.wink.client.RestClient;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.ResponseErrorHandler;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
-import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.UUID;
@@ -27,23 +31,34 @@ public class NotionRestClient {
 
     private final static Logger logger = LogManager.getLogger(NotionRestClient.class);
 
-    private RestClient restClient;
+    private RestTemplate restTemplate;
     private NotionRestConfig notionConfig;
-    private ClientConfig clientConfig;
 
     public NotionRestClient(NotionRestConfig notionConfig) {
         this.notionConfig = notionConfig;
-        this.clientConfig = notionConfig.getClientConfig();
-        this.restClient = new RestClient(clientConfig);
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        if (!StringUtils.isBlank(notionConfig.getProxyHost()) && notionConfig.getProxyPort() > 0) {
+            requestFactory.setProxy(new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(notionConfig.getProxyHost(), notionConfig.getProxyPort())));
+        }
+        if (notionConfig.getConnectTimeout() > 0) {
+            requestFactory.setConnectTimeout(notionConfig.getConnectTimeout());
+        }
+        if (notionConfig.getReadTimeout() > 0) {
+            requestFactory.setReadTimeout(notionConfig.getReadTimeout());
+        }
+
+        this.restTemplate = new RestTemplate(requestFactory);
+        this.restTemplate.setErrorHandler(new ResponseErrorHandler() {
+            public boolean hasError(ClientHttpResponse response) {
+                return false;
+            }
+            public void handleError(ClientHttpResponse response) throws IOException {
+                // Errors are handled by checkResponseStatus to preserve existing behavior.
+            }
+        });
     }
 
-    /**
-
-     * @param includeContentTypeHeader if true, we'll include the JSon "Content-Type" header. If false, we'll not include any Content-type header (to use when using GET or DELETE).
-     * @return
-     */
-    private Resource getNotionResource(String fullUrl, boolean includeContentTypeHeader, String uuid) {
-        Resource resource;
+    private URI getNotionUri(String fullUrl) {
         try {
             URL url = new URL(fullUrl);
             String urlPath = url.getHost();
@@ -57,27 +72,37 @@ public class NotionRestClient {
                 // This will never happen.
                 throw new RuntimeException("Impossible encoding error occurred", e);
             }
-            resource = restClient.resource(uri).accept(MediaType.APPLICATION_JSON).header("Authorization", "Bearer "+ notionConfig.getAuthToken());
-
-            // Following header is required for easy HTTP request tracing in systems such as DataPower.
-            if (uuid != null) {
-                resource.header("X-B3-TraceId", uuid);
-            }
-
-            if (includeContentTypeHeader) {
-                resource.contentType(MediaType.APPLICATION_JSON);
-            }
-
-            // All notion API calls should include Notion-Version Header.
-            resource.header("Notion-Version", NotionConstants.NOTION_API_VERSION);
-
+            return uri;
         } catch (MalformedURLException e) {
             throw new RestRequestException( // is a malformed URL
                     400, String.format("%s is a malformed URL", fullUrl));
         } catch (URISyntaxException e) {
             throw new RestRequestException(400, String.format("%s is a malformed URL", fullUrl));
         }
-        return resource;
+    }
+
+    private HttpEntity<String> getNotionRequestEntity(boolean includeContentTypeHeader, String uuid, String payload) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + notionConfig.getAuthToken());
+        headers.set(HttpHeaders.ACCEPT, org.springframework.http.MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Notion-Version", NotionConstants.NOTION_API_VERSION);
+
+        if (uuid != null) {
+            headers.set("X-B3-TraceId", uuid);
+        }
+        if (includeContentTypeHeader) {
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        }
+        return new HttpEntity<String>(payload, headers);
+    }
+
+    private ClientResponse toClientResponse(final ResponseEntity<String> responseEntity) {
+        ClientResponse response = new ClientResponse();
+        response.setStatusCode(responseEntity.getStatusCodeValue());
+        response.setMessage(responseEntity.getStatusCode().getReasonPhrase());
+        response.setEntity(responseEntity.getBody());
+        response.getHeaders().putAll(responseEntity.getHeaders());
+        return response;
     }
 
     public ClientResponse sendGet(String uri) {
@@ -87,8 +112,15 @@ public class NotionRestClient {
         }
 
         String uuid = UUID.randomUUID().toString();
-        Resource resource = this.getNotionResource(uri, false, uuid);
-        ClientResponse response = resource.get();
+        URI notionUri = this.getNotionUri(uri);
+        HttpEntity<String> requestEntity = this.getNotionRequestEntity(false, uuid, null);
+        ResponseEntity<String> springResponse;
+        try {
+            springResponse = restTemplate.exchange(notionUri, HttpMethod.GET, requestEntity, String.class);
+        } catch (RestClientException e) {
+            throw new RestRequestException(500, "Unexpected REST client error for GET uri " + uri + ": " + e.getMessage());
+        }
+        ClientResponse response = toClientResponse(springResponse);
 
         checkResponseStatus(200, response, uri, "GET", null, uuid);
 
@@ -127,8 +159,15 @@ public class NotionRestClient {
         }
 
         String uuid = UUID.randomUUID().toString();
-        Resource resource = this.getNotionResource(uri, true, uuid);
-        ClientResponse response = resource.post(jsonPayload);
+        URI notionUri = this.getNotionUri(uri);
+        HttpEntity<String> requestEntity = this.getNotionRequestEntity(true, uuid, jsonPayload);
+        ResponseEntity<String> springResponse;
+        try {
+            springResponse = restTemplate.exchange(notionUri, HttpMethod.POST, requestEntity, String.class);
+        } catch (RestClientException e) {
+            throw new RestRequestException(500, "Unexpected REST client error for POST uri " + uri + ": " + e.getMessage());
+        }
+        ClientResponse response = toClientResponse(springResponse);
         checkResponseStatus(expectedHttpStatusCode, response, uri, "POST", jsonPayload, uuid);
 
         return response;
@@ -141,8 +180,15 @@ public class NotionRestClient {
         }
 
         String uuid = UUID.randomUUID().toString();
-        Resource resource = this.getNotionResource(uri,true, uuid);
-        ClientResponse response = resource.put(jsonPayload);
+        URI notionUri = this.getNotionUri(uri);
+        HttpEntity<String> requestEntity = this.getNotionRequestEntity(true, uuid, jsonPayload);
+        ResponseEntity<String> springResponse;
+        try {
+            springResponse = restTemplate.exchange(notionUri, HttpMethod.PUT, requestEntity, String.class);
+        } catch (RestClientException e) {
+            throw new RestRequestException(500, "Unexpected REST client error for PUT uri " + uri + ": " + e.getMessage());
+        }
+        ClientResponse response = toClientResponse(springResponse);
 
         checkResponseStatus(expectedHttpStatusCode, response, uri, "PUT", jsonPayload, uuid);
 
