@@ -1,6 +1,8 @@
 package com.ppm.integration.agilesdk.connector.notion.service;
 
 import com.google.gson.*;
+import com.kintana.core.logging.LogManager;
+import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.ValueSet;
 import com.ppm.integration.agilesdk.connector.notion.NotionConstants;
 import com.ppm.integration.agilesdk.connector.notion.model.*;
@@ -8,7 +10,6 @@ import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestClient;
 import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestConfig;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.wink.client.ClientResponse;
 
 import java.util.*;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  */
 public class NotionService {
 
-    private final static Logger logger = Logger.getLogger(NotionService.class);
+    private final Logger log = LogManager.getLogger(NotionService.class);
 
     private NotionRestClient restClient;
     public NotionService(NotionRestClient restClient) {
