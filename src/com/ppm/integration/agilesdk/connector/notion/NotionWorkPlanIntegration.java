@@ -17,7 +17,7 @@ import com.ppm.integration.agilesdk.provider.LocalizationProvider;
 import com.ppm.integration.agilesdk.provider.Providers;
 import com.ppm.integration.agilesdk.provider.UserProvider;
 import com.ppm.integration.agilesdk.ui.*;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
