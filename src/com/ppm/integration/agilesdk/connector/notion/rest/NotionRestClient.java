@@ -19,6 +19,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -52,7 +54,7 @@ public class NotionRestClient {
             public boolean hasError(ClientHttpResponse response) {
                 return false;
             }
-            public void handleError(ClientHttpResponse response) throws IOException {
+            public void handleError(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
                 // Errors are handled by checkResponseStatus to preserve existing behavior.
             }
         });
@@ -98,8 +100,10 @@ public class NotionRestClient {
 
     private ClientResponse toClientResponse(final ResponseEntity<String> responseEntity) {
         ClientResponse response = new ClientResponse();
-        response.setStatusCode(responseEntity.getStatusCodeValue());
-        response.setMessage(responseEntity.getStatusCode().getReasonPhrase());
+        HttpStatusCode statusCode = responseEntity.getStatusCode();
+        response.setStatusCode(statusCode.value());
+        HttpStatus status = HttpStatus.resolve(statusCode.value());
+        response.setMessage(status != null ? status.getReasonPhrase() : String.valueOf(statusCode.value()));
         response.setEntity(responseEntity.getBody());
         response.getHeaders().putAll(responseEntity.getHeaders());
         return response;
