@@ -1,18 +1,17 @@
 package com.ppm.integration.agilesdk.connector.notion.service;
 
 import com.google.gson.*;
+import com.kintana.core.logging.LogManager;
+import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.ValueSet;
 import com.ppm.integration.agilesdk.connector.notion.NotionConstants;
 import com.ppm.integration.agilesdk.connector.notion.model.*;
+import com.ppm.integration.agilesdk.connector.notion.rest.ClientResponse;
 import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestClient;
 import com.ppm.integration.agilesdk.connector.notion.rest.NotionRestConfig;
-import okhttp3.OkHttpClient;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.wink.client.ClientResponse;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Class in charge of making calls to Notion REST API when needed. Contains a cache, so the service should not be a static member of a class, as the caches are never invalidated and might contain stale data if used as such.
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class NotionService {
 
-    private final static Logger logger = Logger.getLogger(NotionService.class);
+    private final Logger log = LogManager.getLogger(NotionService.class);
 
     private NotionRestClient restClient;
     public NotionService(NotionRestClient restClient) {

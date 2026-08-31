@@ -4,7 +4,7 @@ import com.hp.ppm.user.model.User;
 import com.kintana.core.logging.LogManager;
 import com.kintana.core.logging.Logger;
 import com.ppm.integration.agilesdk.provider.UserProvider;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

@@ -5,30 +5,45 @@
 
 package com.ppm.integration.agilesdk.connector.notion.rest;
 
-
-import org.apache.wink.client.ClientConfig;
-
 public class NotionRestConfig {
-    private ClientConfig clientConfig;
+    private String proxyHost;
+    private int proxyPort;
+    private int connectTimeout;
+    private int readTimeout;
 
     private String authToken;
 
-    public ClientConfig getClientConfig() {
-        return clientConfig;
+    public String getProxyHost() {
+        return proxyHost;
     }
 
-    public NotionRestConfig() {
-        clientConfig = new ClientConfig();
+    public int getProxyPort() {
+        return proxyPort;
     }
 
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
 
-    public ClientConfig setProxy(String proxyHost, String proxyPort) {
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public NotionRestConfig setProxy(String proxyHost, String proxyPort) {
 
         if (proxyHost != null && !proxyHost.isEmpty() && proxyPort != null && !proxyPort.isEmpty()) {
-            clientConfig.proxyHost(proxyHost);
-            clientConfig.proxyPort(Integer.parseInt(proxyPort));
+            this.proxyHost = proxyHost;
+            this.proxyPort = Integer.parseInt(proxyPort);
         }
-        return clientConfig;
+        return this;
     }
 
 

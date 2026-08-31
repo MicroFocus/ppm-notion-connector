@@ -5,10 +5,6 @@
 
 package com.ppm.integration.agilesdk.connector.notion;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.ppm.integration.agilesdk.FunctionIntegration;
 import com.ppm.integration.agilesdk.IntegrationConnector;
 import com.ppm.integration.agilesdk.ValueSet;
@@ -16,7 +12,10 @@ import com.ppm.integration.agilesdk.connector.notion.model.NotionDatabase;
 import com.ppm.integration.agilesdk.connector.notion.service.NotionServiceProvider;
 import com.ppm.integration.agilesdk.model.AgileProject;
 import com.ppm.integration.agilesdk.ui.*;
-import org.apache.commons.lang.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Main Connector class file for Jira Cloud connector.
