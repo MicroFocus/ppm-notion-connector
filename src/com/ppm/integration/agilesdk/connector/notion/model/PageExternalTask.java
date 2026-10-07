@@ -127,14 +127,12 @@ public class PageExternalTask extends ExternalTask {
 
         List<ExternalTaskActuals> actuals = new ArrayList<ExternalTaskActuals>();
 
-
-        final double numResources = resourcesIds.size();
-
-        if (resourcesIds.isEmpty()) {
+        if (resourcesIds==null || resourcesIds.isEmpty()) {
             // All is unassigned effort
             ExternalTaskActuals unassignedActuals = new NotionExternalTaskActuals(actualEffort, percentComplete, getScheduledStart(), getScheduledFinish(), null);
             actuals.add(unassignedActuals);
         } else {
+            final double numResources = resourcesIds.size();
             // One Actual entry per resource.
             for (final Long resourceId : resourcesIds) {
                 ExternalTaskActuals resourceActuals = new NotionExternalTaskActuals(actualEffort / numResources, percentComplete, getScheduledStart(), getScheduledFinish(), null);

@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatusCode;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.util.*;
 import java.util.UUID;
 
 public class NotionRestClient {
@@ -105,7 +106,12 @@ public class NotionRestClient {
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         response.setMessage(status != null ? status.getReasonPhrase() : String.valueOf(statusCode.value()));
         response.setEntity(responseEntity.getBody());
-        response.getHeaders().putAll(responseEntity.getHeaders());
+        HttpHeaders headers = responseEntity.getHeaders();
+        headers.forEach((headerName, headerValues) -> {
+            if (headerValues != null) {
+                response.getHeaders().put(headerName, headerValues);
+            }
+        });
         return response;
     }
 
