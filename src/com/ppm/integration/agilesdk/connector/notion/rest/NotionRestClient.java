@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatusCode;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.util.*;
 import java.util.UUID;
 
 public class NotionRestClient {
@@ -104,11 +105,31 @@ public class NotionRestClient {
         response.setStatusCode(statusCode.value());
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         response.setMessage(status != null ? status.getReasonPhrase() : String.valueOf(statusCode.value()));
-        response.setEntity(responseEntity.getBody());
-        response.getHeaders().putAll(responseEntity.getHeaders());
+        response.setEntity(jsonIncludeNonNull(responseEntity.getBody()));
+        HttpHeaders headers = responseEntity.getHeaders();
+        headers.forEach((headerName, headerValues) -> {
+            if (headerValues != null) {
+                response.getHeaders().put(headerName, headerValues);
+            }
+        });
         return response;
     }
 
+    private Object jsonIncludeNonNull(String responseBody) {
+        try {
+            if (responseBody != null && !responseBody.trim().isEmpty()) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                mapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+
+                Object parsedBody = mapper.readValue(responseBody, Object.class);
+                return mapper.writeValueAsString(parsedBody);
+            }
+        } catch (Exception e) {
+            logger.debug("Error on Parsing data to remove null values from response body: " + e.getMessage(), e);
+        }
+        return responseBody;
+    }
+    
     public ClientResponse sendGet(String uri) {
 
         if (ENABLE_REST_CALLS_STATUS_LOG) {
